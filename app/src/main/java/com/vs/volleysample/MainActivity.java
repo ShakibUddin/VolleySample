@@ -3,11 +3,13 @@ package com.vs.volleysample;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -20,6 +22,7 @@ import com.android.volley.toolbox.StringRequest;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.w3c.dom.Text;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,11 +30,16 @@ import java.util.Map;
 public class MainActivity extends AppCompatActivity {
     private TextView stuname;
     private TextView stuid;
+    private Button post;
     private Button fetch;
+    private Button fetchbyid;
     private String name="";
     private String id="";
-    private String POST_URL = "https://192.168.88.208/Student/post.php";
-    private Integer i=0;
+    private String POST_URL = "http://192.168.88.208/VolleySample/post.php";
+    private String FETCH_URL = "http://192.168.88.208/VolleySample/mssqlGET.php";
+    private String FETCH_BY_ID_URL = "http://192.168.88.208/VolleySample/fetchbyidAPI.php";
+    private int i=0;
+    private TextView result;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,17 +47,34 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         stuname = (EditText) findViewById(R.id.nameinputid);
         stuid = (EditText) findViewById(R.id.idinputid);
+        post = (Button) findViewById(R.id.postbutton);
         fetch = (Button) findViewById(R.id.fetchbutton);
+        fetchbyid = (Button) findViewById(R.id.fetchbyidbutton);
+        result = (TextView)findViewById(R.id.resultid);
 
 
+        post.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                name = stuname.getText().toString();
+                id = stuid.getText().toString();
+                uploadData();
+            }
+        });
         fetch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                name = stuname.getText().toString().trim();
-                id = stuid.getText().toString().trim();
-                //Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.google.com"));
-                //startActivity(browserIntent);
-                uploadData();
+                name = stuname.getText().toString();
+                id = stuid.getText().toString();
+                fetchData();
+            }
+        });
+        fetchbyid.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                id = stuid.getText().toString();
+                uploadParameters();
+                fetchDataById();
             }
         });
     }
@@ -69,16 +94,100 @@ public class MainActivity extends AppCompatActivity {
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Toast.makeText(MainActivity.this, error.getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(MainActivity.this, "Check your internet connection", Toast.LENGTH_LONG).show();
             }
         }) {
             protected Map<String, String> getParams() throws AuthFailureError {
                 Map<String, String> params = new HashMap<>();
+
                 params.put("name", name);
                 params.put("id", id);
+
                 return params;
             }
         };
+        MySingleton.getInstance(MainActivity.this).addToRequestQue(stringRequest);
+    }
+    private void  fetchData() {
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, FETCH_URL, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                try {
+                    JSONObject jsonobject = new JSONObject(response);
+                    JSONArray jsonArray = jsonobject.getJSONArray("retrieved_data");
+
+                    for (i = 0; i < jsonArray.length(); ++i) {
+                        JSONObject jsonObject = jsonArray.getJSONObject(i);
+                        final String name = jsonObject.getString("name");
+                        final String id = jsonObject.getString("pass");
+                        result.append(name+", "+id+"\n");
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(MainActivity.this,"Check your internet connection",Toast.LENGTH_LONG).show();
+            }
+        });
+
+        MySingleton.getInstance(MainActivity.this).addToRequestQue(stringRequest);
+    }
+    private void  uploadParameters() {
+
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, FETCH_BY_ID_URL, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                try {
+                    JSONObject jsonObject = new JSONObject(response);
+                    String Response = jsonObject.getString("response");
+                    Toast.makeText(MainActivity.this, Response, Toast.LENGTH_LONG).show();
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(MainActivity.this, "Check your internet connection", Toast.LENGTH_LONG).show();
+            }
+        }) {
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> params = new HashMap<>();
+                params.put("id", id);
+
+                return params;
+            }
+        };
+        MySingleton.getInstance(MainActivity.this).addToRequestQue(stringRequest);
+    }
+    public void fetchDataById(){
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, FETCH_BY_ID_URL, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                try {
+                    JSONObject jsonobject = new JSONObject(response);
+                    JSONArray jsonArray = jsonobject.getJSONArray("retrieved_data");
+
+                    for (i = 0; i < jsonArray.length(); ++i) {
+                        JSONObject jsonObject = jsonArray.getJSONObject(i);
+                        final String name = jsonObject.getString("name");
+                        final String id = jsonObject.getString("id");
+                        result.append(name+", "+id+"\n");
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(MainActivity.this,"Check your internet connection",Toast.LENGTH_LONG).show();
+            }
+        });
+
         MySingleton.getInstance(MainActivity.this).addToRequestQue(stringRequest);
     }
 }
