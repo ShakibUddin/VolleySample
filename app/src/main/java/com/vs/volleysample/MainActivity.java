@@ -14,6 +14,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -35,9 +36,9 @@ public class MainActivity extends AppCompatActivity {
     private Button fetchbyid;
     private String name="";
     private String id="";
-    private String POST_URL = "http://192.168.88.208/VolleySample/post.php";
-    private String FETCH_URL = "http://192.168.88.208/VolleySample/mssqlGET.php";
-    private String FETCH_BY_ID_URL = "http://192.168.88.208/VolleySample/fetchbyidAPI.php";
+    private String POST_URL = "http://192.168.0.102/VolleySample/mssqlPOST.php";
+    private String FETCH_URL = "http://192.168.0.102/VolleySample/mssqlGET.php";
+    private String FETCH_BY_ID_URL="http://192.168.0.102/VolleySample/mssqlGETbyParam.php";
     private int i=0;
     private TextView result;
 
@@ -73,7 +74,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 id = stuid.getText().toString();
-                uploadParameters();
                 fetchDataById();
             }
         });
@@ -94,15 +94,14 @@ public class MainActivity extends AppCompatActivity {
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Toast.makeText(MainActivity.this, "Check your internet connection", Toast.LENGTH_LONG).show();
+                error.printStackTrace();
+                Toast.makeText(MainActivity.this, error.getMessage(), Toast.LENGTH_LONG).show();
             }
         }) {
             protected Map<String, String> getParams() throws AuthFailureError {
                 Map<String, String> params = new HashMap<>();
-
                 params.put("name", name);
-                params.put("id", id);
-
+                params.put("pass", id);
                 return params;
             }
         };
@@ -164,7 +163,8 @@ public class MainActivity extends AppCompatActivity {
         MySingleton.getInstance(MainActivity.this).addToRequestQue(stringRequest);
     }
     public void fetchDataById(){
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, FETCH_BY_ID_URL, new Response.Listener<String>() {
+        //##### IF YOU ARE GETTING DATA USE POST INSTEAD OF GET...just SEND PARAMETERS USING OVERRIDDEN getParams()
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, FETCH_BY_ID_URL, new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
                 try {
@@ -174,20 +174,28 @@ public class MainActivity extends AppCompatActivity {
                     for (i = 0; i < jsonArray.length(); ++i) {
                         JSONObject jsonObject = jsonArray.getJSONObject(i);
                         final String name = jsonObject.getString("name");
-                        final String id = jsonObject.getString("id");
+                        final String id = jsonObject.getString("pass");
                         result.append(name+", "+id+"\n");
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
+                    Toast.makeText(MainActivity.this,e.getMessage(),Toast.LENGTH_LONG).show();
                 }
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Toast.makeText(MainActivity.this,"Check your internet connection",Toast.LENGTH_LONG).show();
+                Toast.makeText(MainActivity.this,error.getMessage(),Toast.LENGTH_LONG).show();
             }
-        });
+        }){
+            @Override
+            protected Map<String, String> getParams() {
+                Map<String, String> params = new HashMap<>();
+                params.put("pass", id);
 
+                return params;
+            }};
+        stringRequest.setRetryPolicy(new DefaultRetryPolicy(5000,1,2));
         MySingleton.getInstance(MainActivity.this).addToRequestQue(stringRequest);
     }
 }
