@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -35,10 +36,11 @@ public class MainActivity extends AppCompatActivity {
     private Button fetch;
     private Button fetchbyid;
     private String name="";
+    private String fetchedname="";
     private String id="";
-    private String POST_URL = "http://192.168.0.102/VolleySample/mssqlPOST.php";
-    private String FETCH_URL = "http://192.168.0.102/VolleySample/mssqlGET.php";
-    private String FETCH_BY_ID_URL="http://192.168.0.102/VolleySample/mssqlGETbyParam.php";
+    private String POST_URL = "http://192.168.0.103/VolleySample/post.php";
+    private String FETCH_URL = "http://192.168.0.103/VolleySample/fetchAPI.php";
+    private String FETCH_BY_ID_URL="http://192.168.0.103/VolleySample/fetchbyidAPI.php";
     private int i=0;
     private TextView result;
 
@@ -75,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 id = stuid.getText().toString();
                 fetchDataById();
+                Toast.makeText(MainActivity.this,fetchedname,Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -101,7 +104,7 @@ public class MainActivity extends AppCompatActivity {
             protected Map<String, String> getParams() throws AuthFailureError {
                 Map<String, String> params = new HashMap<>();
                 params.put("name", name);
-                params.put("pass", id);
+                params.put("id", id);
                 return params;
             }
         };
@@ -118,7 +121,7 @@ public class MainActivity extends AppCompatActivity {
                     for (i = 0; i < jsonArray.length(); ++i) {
                         JSONObject jsonObject = jsonArray.getJSONObject(i);
                         final String name = jsonObject.getString("name");
-                        final String id = jsonObject.getString("pass");
+                        final String id = jsonObject.getString("id");
                         result.append(name+", "+id+"\n");
                     }
                 } catch (JSONException e) {
@@ -134,34 +137,6 @@ public class MainActivity extends AppCompatActivity {
 
         MySingleton.getInstance(MainActivity.this).addToRequestQue(stringRequest);
     }
-    private void  uploadParameters() {
-
-        StringRequest stringRequest = new StringRequest(Request.Method.POST, FETCH_BY_ID_URL, new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                try {
-                    JSONObject jsonObject = new JSONObject(response);
-                    String Response = jsonObject.getString("response");
-                    Toast.makeText(MainActivity.this, Response, Toast.LENGTH_LONG).show();
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Toast.makeText(MainActivity.this, "Check your internet connection", Toast.LENGTH_LONG).show();
-            }
-        }) {
-            protected Map<String, String> getParams() throws AuthFailureError {
-                Map<String, String> params = new HashMap<>();
-                params.put("id", id);
-
-                return params;
-            }
-        };
-        MySingleton.getInstance(MainActivity.this).addToRequestQue(stringRequest);
-    }
     public void fetchDataById(){
         //##### IF YOU ARE GETTING DATA USE POST INSTEAD OF GET...just SEND PARAMETERS USING OVERRIDDEN getParams()
         StringRequest stringRequest = new StringRequest(Request.Method.POST, FETCH_BY_ID_URL, new Response.Listener<String>() {
@@ -174,12 +149,13 @@ public class MainActivity extends AppCompatActivity {
                     for (i = 0; i < jsonArray.length(); ++i) {
                         JSONObject jsonObject = jsonArray.getJSONObject(i);
                         final String name = jsonObject.getString("name");
-                        final String id = jsonObject.getString("pass");
+                        final String id = jsonObject.getString("id");
                         result.append(name+", "+id+"\n");
                     }
+                    fetchedname=name;
                 } catch (JSONException e) {
                     e.printStackTrace();
-                    Toast.makeText(MainActivity.this,e.getMessage(),Toast.LENGTH_LONG).show();
+                    //Toast.makeText(MainActivity.this,e.getMessage(),Toast.LENGTH_LONG).show();
                 }
             }
         }, new Response.ErrorListener() {
