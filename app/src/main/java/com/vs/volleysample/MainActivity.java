@@ -77,7 +77,6 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 id = stuid.getText().toString();
                 fetchDataById();
-                Toast.makeText(MainActivity.this,fetchedname,Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -153,6 +152,7 @@ public class MainActivity extends AppCompatActivity {
                         result.append(name+", "+id+"\n");
                     }
                     fetchedname=name;
+                    Toast.makeText(MainActivity.this,fetchedname,Toast.LENGTH_SHORT).show();
                 } catch (JSONException e) {
                     e.printStackTrace();
                     //Toast.makeText(MainActivity.this,e.getMessage(),Toast.LENGTH_LONG).show();
