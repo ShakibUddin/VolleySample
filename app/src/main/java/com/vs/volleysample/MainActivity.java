@@ -152,7 +152,6 @@ public class MainActivity extends AppCompatActivity {
                         result.append(name+", "+id+"\n");
                     }
                     fetchedname=name;
-                    Toast.makeText(MainActivity.this,fetchedname,Toast.LENGTH_SHORT).show();
                 } catch (JSONException e) {
                     e.printStackTrace();
                     //Toast.makeText(MainActivity.this,e.getMessage(),Toast.LENGTH_LONG).show();
@@ -167,7 +166,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             protected Map<String, String> getParams() {
                 Map<String, String> params = new HashMap<>();
-                params.put("pass", id);
+                params.put("id", id);
 
                 return params;
             }};
