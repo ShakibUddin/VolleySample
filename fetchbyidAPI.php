@@ -12,7 +12,7 @@ if(mysqli_connect_errno()){
 }
 if($con){
         $id=$_POST["id"];
-        $sql="SELECT * FROM data WHERE id='1221'";
+        $sql="SELECT * FROM data WHERE id='$id'";
         $retrieved_data = array();
         $response = mysqli_query($con,$sql);
         if(mysqli_num_rows($response)>0){
